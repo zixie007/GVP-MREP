@@ -17,6 +17,12 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>catkin_simple</buildtool_depend>
   <!-- <depend>octomap_world</depend> -->
+
+  <!-- **** depend = build_depend + exec_depend ****-->
+  <!-- build_depend：编译时依赖。先编译所依赖的包再编译本包 -->
+  <!-- build_export_depend：编译导出依赖，本包需要导出（被依赖） -->
+  <!-- exec_depend：执行依赖 -->
+
   <depend>roscpp</depend>
   <depend>visualization_msgs</depend>
   <!-- <depend>frontier_manager</depend> -->
