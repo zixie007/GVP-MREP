@@ -105,7 +105,7 @@ void Murder::BroadCastFinish(){
 
 
 }
-
+// 返回0/2/4时，exc_plan = true; 否则MurderFSM::FSMCallback直接return
 int Murder::AllowPlan(const double &T){
     /* not satisfy plan interval */
     if(T - plan_t_ < 0){

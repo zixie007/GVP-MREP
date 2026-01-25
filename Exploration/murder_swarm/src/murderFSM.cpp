@@ -43,7 +43,7 @@ void MurderFSM::FSMCallback(const ros::TimerEvent &e){
     // else if(ap == 3 && (state_ == M_State::EXCUTE /*|| state_ == M_State::LOCALPLAN*/)) exc_plan = false; // sensor not update
     else if(ap == 3) exc_plan = false; // sensor not update
     else if(ap == 4) exc_plan = true;  // viewpoints not sampled
-
+    // exc_plan决定是否进入FSM
     if(!exc_plan) {
         return;
     }
