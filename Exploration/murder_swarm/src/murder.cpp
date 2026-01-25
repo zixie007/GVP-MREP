@@ -131,7 +131,7 @@ int Murder::AllowPlan(const double &T){
 
     return 0;
 }
-
+// 设置下次规划的绝对时间paln_t_
 void Murder::SetPlanInterval(const double &intv){
     plan_t_ = ros::WallTime::now().toSec() + intv;
     sensor_flag_ = false;

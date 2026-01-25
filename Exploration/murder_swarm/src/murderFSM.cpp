@@ -30,6 +30,7 @@ void MurderFSM::TriggerCallback(const std_msgs::EmptyConstPtr &msg){
 
 void MurderFSM::FSMCallback(const ros::TimerEvent &e){
     bool exc_plan = true;
+    // ros::WallTime::now()：wall clock time of system, irrelevant to ROS simulation
     int ap = M_planner_.AllowPlan(ros::WallTime::now().toSec());
     
     if(state_ != FINISH){
