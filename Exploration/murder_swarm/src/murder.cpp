@@ -634,7 +634,7 @@ bool Murder::TrajCheck(){
     cur_t = cur_t - traj_start_t_;
     Eigen::Vector3d last_p = TrajOpt_.traj.getPos(cur_t);
     Eigen::Vector3d p, r_size;
-    r_size = LRM_.GetRobotSize() * 0.8;
+    r_size = LRM_.GetRobotSize() * 0.8; // LRM_.GetRobotSize()获得机器人的尺寸大小  Eigen::Vector3d(0.5, 0.5, 0.5)
     if(swarm_check_){
         if(!SwarmFeasiCheck()) return false;
     }

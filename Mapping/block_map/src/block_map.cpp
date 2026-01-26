@@ -19,25 +19,25 @@ void BlockMap::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
         CG, {});
     nh_private_.param(ns + "/block_map/HeightcolorB", 
         CB, {});
-    nh_private_.param(ns + "/block_map/minX", 
+    nh_private_.param(ns + "/block_map/minX",  // -22.5
         origin_.x(), -10.0);
-    nh_private_.param(ns + "/block_map/minY", 
+    nh_private_.param(ns + "/block_map/minY",  // -22.5
         origin_.y(), -10.0);
-    nh_private_.param(ns + "/block_map/minZ", 
+    nh_private_.param(ns + "/block_map/minZ",  // -0.1
         origin_.z(), 0.0);
-    nh_private_.param(ns + "/block_map/maxX", 
+    nh_private_.param(ns + "/block_map/maxX",  // 22.5
         map_upbd_.x(), 10.0);
-    nh_private_.param(ns + "/block_map/maxY", 
+    nh_private_.param(ns + "/block_map/maxY",  // 22.5
         map_upbd_.y(), 10.0);
-    nh_private_.param(ns + "/block_map/maxZ", 
+    nh_private_.param(ns + "/block_map/maxZ",  // 3.2
         map_upbd_.z(), 0.0);
-    nh_private_.param(ns + "/block_map/blockX", 
+    nh_private_.param(ns + "/block_map/blockX", // 10
         block_size_.x(), 5);
-    nh_private_.param(ns + "/block_map/blockY", 
+    nh_private_.param(ns + "/block_map/blockY", // 10
         block_size_.y(), 5);
-    nh_private_.param(ns + "/block_map/blockZ", 
+    nh_private_.param(ns + "/block_map/blockZ", // 10
         block_size_.z(), 3);
-    nh_private_.param(ns + "/block_map/resolution", 
+    nh_private_.param(ns + "/block_map/resolution",  // 0.1
         resolution_, 0.2);
     nh_private_.param(ns + "/block_map/sensor_max_range", 
         max_range_, 4.5);
@@ -140,7 +140,7 @@ void BlockMap::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
     // cam2body_.block(0, 3, 3, 1) = cam2bodyrot.matrix();
 
     cam2body_(3, 3) = 1.0;
-
+    // map_upbd_ =  22.5 - (-22.5) 转换成resolution_整数倍
     map_upbd_.x() = ceil((map_upbd_.x() - origin_.x())/resolution_) * resolution_;
     map_upbd_.y() = ceil((map_upbd_.y() - origin_.y())/resolution_) * resolution_;
     map_upbd_.z() = ceil((map_upbd_.z() - origin_.z())/resolution_) * resolution_;
@@ -148,7 +148,7 @@ void BlockMap::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
     double dx = origin_.x() - (floor((origin_.x())/resolution_)) * resolution_;
     double dy = origin_.y() - (floor((origin_.y())/resolution_)) * resolution_;
     double dz = origin_.z() - (floor((origin_.z())/resolution_)) * resolution_;
-
+    // origin_ = -22.5 转换成resolution_整数倍
     origin_.x() -= dx;
     origin_.y() -= dy;
     origin_.z() -= dz;
@@ -156,15 +156,19 @@ void BlockMap::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
     map_upbd_.x() += resolution_;
     map_upbd_.y() += resolution_;
     map_upbd_.z() += resolution_;
+    // 求地图XYZ / 分辨率的个数：voxel_num_
     voxel_num_.x() = ceil((map_upbd_.x())/resolution_);
     voxel_num_.y() = ceil((map_upbd_.y())/resolution_);
     voxel_num_.z() = ceil((map_upbd_.z())/resolution_);
+    // 恢复 map_upbd_ = 22.5, map_lowbd_ = -22.5
     map_upbd_ = origin_ + map_upbd_ - Vector3d(1e-4, 1e-4, 1e-4);
     map_lowbd_ = origin_ + Vector3d(1e-4, 1e-4, 1e-4);
-
+    // 求地图XYZ / 分辨率 / block_size_的个数：block_num_
+    // block_num_ = voxel_num_ / block_size_ =  (map_upbd_.x() - origin_.x()) / resolution_ / block_size_ = (map_upbd_.x() - origin_.x()) / (resolution_ * block_size_)
     block_num_.x() = ceil(double(voxel_num_.x()) / block_size_.x());
     block_num_.y() = ceil(double(voxel_num_.y()) / block_size_.y());
     block_num_.z() = ceil(double(voxel_num_.z()) / block_size_.z());
+    // block正方形块的边长为1m
     blockscale_.x() = resolution_*block_size_.x();
     blockscale_.y() = resolution_*block_size_.y();
     blockscale_.z() = resolution_*block_size_.z();

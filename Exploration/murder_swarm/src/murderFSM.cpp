@@ -50,6 +50,15 @@ void MurderFSM::FSMCallback(const ros::TimerEvent &e){
 
     switch (state_)
     {
+
+        /** 
+         * EXCUTE: excute traj, strongcheck several viewpoints, check the feasibility of the traj
+         * SLEEP: before exploratin
+         * FINISH: no explorable viewpoint, return start place 
+         * LOCALPLAN: to the closest local viewpoint
+         * GLOBALPLAN: to the closest global viewpoint
+         */
+
         case M_State::EXCUTE :{
             /* trajectory check */
             if(!M_planner_.TrajCheck()){ // traj infeasible, find new target

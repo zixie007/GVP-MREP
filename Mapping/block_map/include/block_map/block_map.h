@@ -564,6 +564,7 @@ inline int BlockMap::GetBlockId(const Eigen::Vector3d &pos){//check
     if(InsideMap(pos)){
         Eigen::Vector3d dpos = pos - origin_;
         Eigen::Vector3i posid;
+        // blockscale_.x() = resolution_*block_size_.x() = 0.1 * 10 = 1.0;
         posid.x() = floor(dpos.x() / blockscale_.x());
         posid.y() = floor(dpos.y() / blockscale_.y());
         posid.z() = floor(dpos.z() / blockscale_.z());
@@ -613,7 +614,7 @@ inline bool BlockMap::InsideMap(const Eigen::Vector3i &pos){
         return false;
     return true;
 }
-
+// 判断三维点pos是否在map内
 inline bool BlockMap::InsideMap(const Eigen::Vector3d &pos){
     if(pos(0) < map_lowbd_(0)|| pos(1) < map_lowbd_(1)|| pos(2) < map_lowbd_(2)||
         pos(0) >  map_upbd_(0) || pos(1) > map_upbd_(1) || pos(2) > map_upbd_(2) )
