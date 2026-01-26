@@ -972,12 +972,13 @@ bool BlockMap::PosBBXOccupied(const Eigen::Vector3d &pos, const Eigen::Vector3d 
     }
     return false;
 }
-
+// 检查以pos为体心，边长为bbx正方体中所有体素的状态是否为free
 bool BlockMap::PosBBXFree(const Eigen::Vector3d &pos, const Eigen::Vector3d &bbx){
     Eigen::Vector3d lowbd, upbd, v_it;
     VoxelState state;
     lowbd = pos - bbx / 2;
     upbd = pos + bbx / 2 + Eigen::Vector3d::Ones() * (resolution_ - 1e-3);
+    // 相当于检查pos点对应体素状态的同时，考虑了无人机几何size的影响，从而检查整个无人机几何模型对应的体素状态
     for(v_it(0) = lowbd(0); v_it(0) < upbd(0); v_it(0) += resolution_){
         for(v_it(1) = lowbd(1); v_it(1) < upbd(1); v_it(1) += resolution_){
             for(v_it(2) = lowbd(2); v_it(2) < upbd(2); v_it(2) += resolution_){
