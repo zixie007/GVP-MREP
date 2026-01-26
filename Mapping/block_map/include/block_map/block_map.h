@@ -584,14 +584,15 @@ inline int BlockMap::GetBlockId(const Eigen::Vector3i &pos){//check, pos: block 
         return pos(2)*block_num_(0)*block_num_(1) + pos(1)*block_num_(0) + pos(0);
     }
 }
-
+// 获取三维点pos在block块内的局部1d体素索引
 inline int BlockMap::GetVoxId(const Eigen::Vector3d &pos, const shared_ptr<Grid_Block> &GB){//don't check, pos of world
-    Eigen::Vector3d dpos = pos - origin_ - GB->origin_.cast<double>()*resolution_;
+    // GB->origin_.cast<double>()*resolution_：每个block块左下角的坐标 - origin_
+    Eigen::Vector3d dpos = pos - origin_ - GB->origin_.cast<double>()*resolution_;  // dpos为pos相对于block块左下角的相对坐标
     Eigen::Vector3i posid;
     posid.x() = floor(dpos(0) / resolution_);
     posid.y() = floor(dpos(1) / resolution_);
     posid.z() = floor(dpos(2) / resolution_);
-
+    // 获取pos相对于block块左下角相对坐标的block局部1d体素索引
     return posid(2) * GB->block_size_.x() * GB->block_size_.y() + posid(1) * GB->block_size_.x() + posid(0);
 }
 
@@ -683,9 +684,24 @@ inline VoxelState BlockMap::GetVoxState(const Eigen::Vector3i &id){
 }
 
 inline VoxelState BlockMap::GetVoxState(const Eigen::Vector3d &pos){
-    int blockid = GetBlockId(pos);
-    if(blockid != -1){
+    int blockid = GetBlockId(pos);  // 获取点pos的1d块索引
+    if(blockid != -1){  // 点pos在map内
         shared_ptr<Grid_Block> GB_ptr = GBS_[blockid];
+         
+        /* enum GBSTATE{
+                UNKNOWN,
+                MIXED,
+                OCCUPIED,
+                FREE
+           }; */
+
+        /* enum VoxelState{
+                unknown, 
+                free, 
+                occupied,
+                out
+           }; */
+
         if(GB_ptr->state_ == MIXED){
             float odds = GBS_[blockid]->odds_log_[GetVoxId(pos, GBS_[blockid])];
             // cout<<odds<<"  "<<thr_min_<<endl;
@@ -699,7 +715,7 @@ inline VoxelState BlockMap::GetVoxState(const Eigen::Vector3d &pos){
         else if(GBS_[blockid]->state_ == GBSTATE::OCCUPIED){
             return VoxelState::occupied;
         }
-        else{
+        else{  // GBS_[blockid]->state_ == GBSTATE::UNKNOWN
             return VoxelState::unknown;
         }
     }

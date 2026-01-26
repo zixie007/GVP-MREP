@@ -172,7 +172,7 @@ void BlockMap::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
     blockscale_.x() = resolution_*block_size_.x();
     blockscale_.y() = resolution_*block_size_.y();
     blockscale_.z() = resolution_*block_size_.z();
-
+    // 边缘block块XYZ对应的voxel_num_
     edgeblock_size_.x() = voxel_num_.x() - floor(voxel_num_.x() / double(block_size_.x()))*block_size_.x();
     edgeblock_size_.y() = voxel_num_.y() - floor(voxel_num_.y() / double(block_size_.y()))*block_size_.y();
     edgeblock_size_.z() = voxel_num_.z() - floor(voxel_num_.z() / double(block_size_.z()))*block_size_.z();
@@ -181,20 +181,22 @@ void BlockMap::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
     if(edgeblock_size_.y() == 0) edgeblock_size_.y() = block_size_.y();
     if(edgeblock_size_.z() == 0) edgeblock_size_.z() = block_size_.z();
     
-
+    // 边缘block块XYZ的实际3d长度
     edgeblock_scale_.x() = resolution_*edgeblock_size_.x();
     edgeblock_scale_.y() = resolution_*edgeblock_size_.y();
     edgeblock_scale_.z() = resolution_*edgeblock_size_.z();
+    // vector<shared_ptr<Grid_Block>> GBS_; GBS_指向Grid_Block结构体智能指针的容器
     GBS_.resize(block_num_.x()*block_num_.y()*block_num_.z());
     for(int x = 0; x < block_num_.x(); x++){
         for(int y = 0; y < block_num_.y(); y++){
             for(int z = 0; z < block_num_.z(); z++){
-                int idx = x + y * block_num_.x() + z * block_num_.x() * block_num_.y();
-                GBS_[idx] = make_shared<Grid_Block>();
-                GBS_[idx]->origin_.x() = block_size_.x() * x;
+                int idx = x + y * block_num_.x() + z * block_num_.x() * block_num_.y();  // 将3d block块索引转换成1d block块索引 
+                GBS_[idx] = make_shared<Grid_Block>(); // 给nullptr赋值 make_shared创建一个shared_ptr
+                GBS_[idx]->origin_.x() = block_size_.x() * x;  // 将block_num_转换成对应的voxel_num_
                 GBS_[idx]->origin_.y() = block_size_.y() * y;
                 GBS_[idx]->origin_.z() = block_size_.z() * z;
                 GBS_[idx]->show_ = false;
+                // GBS_[idx]->block_size_ 根据是否是边缘block确定block_size_是block_size_ or edgeblock_size_
                 if(x == block_num_.x() - 1) GBS_[idx]->block_size_.x() = edgeblock_size_.x();
                 else GBS_[idx]->block_size_.x() = block_size_.x();
                 if(y == block_num_.y() - 1) GBS_[idx]->block_size_.y() = edgeblock_size_.y();
