@@ -624,25 +624,26 @@ bool Murder::GlobalPlan(){
     //     return false;
     // }
 }
-
+// 考虑无人机几何形状，检测轨迹上的点是否free + 多机swarm碰撞检测？？？
 bool Murder::TrajCheck(){
     double cur_t = max(ros::WallTime::now().toSec(), traj_start_t_);
 
     if(cur_t > replan_t_ - 1e-3) return false;
 
     double end_t = min(check_duration_, traj_end_t_ - 1e-3 - cur_t);
-    cur_t = cur_t - traj_start_t_;
+    cur_t = cur_t - traj_start_t_;  // 获取相对轨迹时间
     Eigen::Vector3d last_p = TrajOpt_.traj.getPos(cur_t);
     Eigen::Vector3d p, r_size;
     r_size = LRM_.GetRobotSize() * 0.8; // LRM_.GetRobotSize()获得机器人的尺寸大小  Eigen::Vector3d(0.5, 0.5, 0.5)
-    if(swarm_check_){
+    if(swarm_check_){ // 检测自己是否会与其他无人机碰撞 ？？？
         if(!SwarmFeasiCheck()) return false;
     }
     for(double t = cur_t; t < end_t; t += 0.05){
         p = TrajOpt_.traj.getPos(t);
         for(int dim = 0; dim < 3; dim ++){
+            // 这里写的很好：只有点p某一维距离当前无人机位置(理想情况下，cur_t所对应的位置)大于分辨率时，才会进行PosBBXFree检测；一旦检测完，立马break
             if(abs(p(dim) - last_p(dim)) > BM_.resolution_){
-                if(!BM_.PosBBXFree(p, r_size)) return false;
+                if(!BM_.PosBBXFree(p, r_size)) return false;  //PosBBXFree():检测点p为体心，r_size为边长的正方体内所有体素状态是否为free
                 break;
             }
         }
