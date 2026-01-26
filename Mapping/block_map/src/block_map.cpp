@@ -65,7 +65,7 @@ void BlockMap::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
         depth_step_, 2);
     nh_private_.param(ns + "/block_map/occ_max", 
         thr_max_, 0.9);
-    nh_private_.param(ns + "/block_map/occ_min", 
+    nh_private_.param(ns + "/block_map/occ_min", // 0.2
         thr_min_, 0.1);
     nh_private_.param(ns + "/block_map/pro_hit_occ", 
         pro_hit_, 0.7);
@@ -231,7 +231,7 @@ void BlockMap::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
     cout<<"update_interval_:"<<update_interval_<<endl;
 
     thr_max_ = log(thr_max_ / (1 - thr_max_));
-    thr_min_ = log(thr_min_ / (1 - thr_min_));
+    thr_min_ = log(thr_min_ / (1 - thr_min_));  // log(0.2/0.8) = -1.3863
     pro_hit_ = log(pro_hit_ / (1 - pro_miss_));
     pro_miss_ = log((1 - pro_miss_) / pro_miss_);
     cout<<"thr_max_:"<<thr_max_<<endl;

@@ -682,7 +682,7 @@ inline VoxelState BlockMap::GetVoxState(const Eigen::Vector3i &id){
     int voxid = id(0) + id(1) * voxel_num_(0) + id(2) * voxel_num_(0) * voxel_num_(1);
     return GetVoxState(voxid);
 }
-
+// 根据点pos所在block块的块状态，确定点pos的体素状态
 inline VoxelState BlockMap::GetVoxState(const Eigen::Vector3d &pos){
     int blockid = GetBlockId(pos);  // 获取点pos的1d块索引
     if(blockid != -1){  // 点pos在map内
@@ -703,12 +703,15 @@ inline VoxelState BlockMap::GetVoxState(const Eigen::Vector3d &pos){
            }; */
 
         if(GB_ptr->state_ == MIXED){
+            // GetVoxId() 确定点pos相对于所在block块的1d体素索引
             float odds = GBS_[blockid]->odds_log_[GetVoxId(pos, GBS_[blockid])];
             // cout<<odds<<"  "<<thr_min_<<endl;
             if(odds > 0) return VoxelState::occupied;
+            // thr_min_ = -1.3863
             else if(odds < 0 && odds > thr_min_ - 1e-3) return VoxelState::free;
             else return VoxelState::unknown;
         }
+        // 如果点pos所在block的状态为FREE、OCCUPIED、UNKNOWN，则该点的体素状态对应为free、occupied、unknown
         else if(GBS_[blockid]->state_ == GBSTATE::FREE){
             return VoxelState::free;
         }
@@ -719,7 +722,7 @@ inline VoxelState BlockMap::GetVoxState(const Eigen::Vector3d &pos){
             return VoxelState::unknown;
         }
     }
-    else{
+    else{ // 点pos不在map内
         return VoxelState::out;
     }
 }
