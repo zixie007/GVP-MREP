@@ -559,7 +559,7 @@ inline bool BlockMap::GetBlock3Id(const Eigen::Vector3d &pos, Eigen::Vector3i &b
         return false;
     }
 }
-
+// 获取三维点pos的block块1d索引
 inline int BlockMap::GetBlockId(const Eigen::Vector3d &pos){//check
     if(InsideMap(pos)){
         Eigen::Vector3d dpos = pos - origin_;
@@ -568,7 +568,7 @@ inline int BlockMap::GetBlockId(const Eigen::Vector3d &pos){//check
         posid.x() = floor(dpos.x() / blockscale_.x());
         posid.y() = floor(dpos.y() / blockscale_.y());
         posid.z() = floor(dpos.z() / blockscale_.z());
-        return posid(2)*block_num_(0)*block_num_(1) + posid(1)*block_num_(0) + posid(0);
+        return posid(2)*block_num_(0)*block_num_(1) + posid(1)*block_num_(0) + posid(0); // 将block的3d索引posid转化为1d索引
     }
     else{
         return -1;
