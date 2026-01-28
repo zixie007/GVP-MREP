@@ -835,25 +835,29 @@ int Murder::SwitchMode(){
     else if(GVP_.GlobalExplorable()) return 2;
     else return 0;
 }
-
+// 检查前沿视点的有效性，无效的剔除；根据当前视点是否有效或者已经探索完成，决定return1/0
 int Murder::ViewPointsCheck(const double &t){
     list<int> local_f;
     double start_t = ros::WallTime::now().toSec();
-    double remain_t = t;
-    MDTG_.GetAllLocalFroVps(local_f);
-    for(auto &f : local_f){
+    double remain_t = t;  // 0.005
+    MDTG_.GetAllLocalFroVps(local_f);  // 获取所有local前沿点local_f
+    for(auto &f : local_f){  // 强制检查时间 strong_check_interval_ = 3
         if(start_t - FG_.f_grid_[f].last_strong_check_ > strong_check_interval_){
+            // FrontierGrid(class) FG_
+            // class FrontierGrid成员变量：    vector<CoarseFrontier>(struct) f_grid_  前沿点
+            // struct CoarseFrontier成员变量： vector<uint8_t> local_vps_              围绕前沿点采样的候选视点
             for(int v = 0; v < FG_.f_grid_[f].local_vps_.size(); v++){
-                if(FG_.f_grid_[f].local_vps_[v] != 1) continue;
-                if(!FG_.StrongCheckViewpoint(f, v, true)){
-                    if(f >= 0 && f < FG_.f_grid_.size() && 0 <= v && v < FG_.f_grid_[f].local_vps_.size() && f != target_f_id_ && v != target_v_id_)
+                if(FG_.f_grid_[f].local_vps_[v] != 1) continue;  // 0: unsampled; 1:alive; 2: dead;
+                if(!FG_.StrongCheckViewpoint(f, v, true)){  
+                    // int target_f_id_, target_v_id_; -1: no target now, -2: go home
+                    if(f >= 0 && f < FG_.f_grid_.size() && 0 <= v && v < FG_.f_grid_[f].local_vps_.size() && f != target_f_id_ && v != target_v_id_)  // f != target_f_id_ && v != target_v_id_确保删除的不是当前的目标视点
                         MDTG_.RemoveVp(FG_.f_grid_[f].center_, f, v, true);
                 }
             }
             FG_.f_grid_[f].last_strong_check_ = start_t + strong_check_interval_;
         }
         remain_t = ros::WallTime::now().toSec() - start_t;//not right
-        if(remain_t < 0) break;
+        if(remain_t < 0) break;  // 这里应该是想限制for(auto &f : local_f){...}的时间，maybe:remain_t > t
     }
     
     Eigen::Vector3d tar_p(target_vp_pose_(0), target_vp_pose_(1), target_vp_pose_(2));
@@ -862,6 +866,7 @@ int Murder::ViewPointsCheck(const double &t){
     // dyaw = abs(yaw_ - target_vp_pose_(3));
     // if(abs(dyaw) > 2 * M_PI) dyaw = dyaw - floor(dyaw / (M_PI*2)) * M_PI * 2; 
     dp = (tar_p - p_).norm();
+    // (dp < 1.0 && dyaw < 0.5) 根据距离阈值和偏航角阈值判断是否已经完成目标视点的探索
     if(!FG_.StrongCheckViewpoint(target_f_id_, target_v_id_, true) || (dp < 1.0 && dyaw < 0.5)){
         if(target_f_id_ >= 0 && target_f_id_ < FG_.f_grid_.size() && 0 <= target_v_id_ && target_v_id_ < FG_.f_grid_[target_f_id_].local_vps_.size())
             MDTG_.RemoveVp(FG_.f_grid_[target_f_id_].center_, target_f_id_, target_v_id_, true);

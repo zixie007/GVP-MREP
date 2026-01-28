@@ -16,37 +16,37 @@ void LowResMap::init(const ros::NodeHandle &nh,
         localgraph_scale.y(), 14.0);
     nh_private_.param(ns + "/LowResMap/localgraph_sizez", 
         localgraph_scale.z(), 8.0);
-    nh_private_.param(ns + "/LowResMap/node_x", 
+    nh_private_.param(ns + "/LowResMap/node_x", // 0.6
         node_scale_.x(), 0.5);
-    nh_private_.param(ns + "/LowResMap/node_y", 
+    nh_private_.param(ns + "/LowResMap/node_y", // 0.6
         node_scale_.y(), 0.5);
-    nh_private_.param(ns + "/LowResMap/node_z", 
+    nh_private_.param(ns + "/LowResMap/node_z", // 0.6
         node_scale_.z(), 0.3);
-    nh_private_.param(ns + "/Exp/robot_sizeX", 
+    nh_private_.param(ns + "/Exp/robot_sizeX",  // 0.48
         Robot_size_.x(), 0.5);
-    nh_private_.param(ns + "/Exp/robot_sizeY", 
+    nh_private_.param(ns + "/Exp/robot_sizeY",  // 0.48
         Robot_size_.y(), 0.5);
-    nh_private_.param(ns + "/Exp/robot_sizeZ", 
+    nh_private_.param(ns + "/Exp/robot_sizeZ",
         Robot_size_.z(), 0.3);
-    nh_private_.param(ns + "/LowResMap/lambda_heu", 
+    nh_private_.param(ns + "/LowResMap/lambda_heu", // 5.0
         lambda_heu_, 1.5);
-    nh_private_.param(ns + "/Exp/minX", 
+    nh_private_.param(ns + "/Exp/minX",
         origin_.x(), -10.0);
-    nh_private_.param(ns + "/Exp/minY", 
+    nh_private_.param(ns + "/Exp/minY", // -20
         origin_.y(), -10.0);
-    nh_private_.param(ns + "/Exp/minZ", 
+    nh_private_.param(ns + "/Exp/minZ",
         origin_.z(), 0.0);
-    nh_private_.param(ns + "/LowResMap/corridor_expX", 
+    nh_private_.param(ns + "/LowResMap/corridor_expX", // 2
         corridor_exp_r_.x(), 1);
-    nh_private_.param(ns + "/LowResMap/corridor_expY", 
+    nh_private_.param(ns + "/LowResMap/corridor_expY", // 2
         corridor_exp_r_.y(), 1);
     nh_private_.param(ns + "/LowResMap/corridor_expZ", 
         corridor_exp_r_.z(), 1);
-    nh_private_.param(ns + "/Exp/maxX", 
+    nh_private_.param(ns + "/Exp/maxX",
         mapscale_.x(), 10.0);
-    nh_private_.param(ns + "/Exp/maxY", 
+    nh_private_.param(ns + "/Exp/maxY", // 20.0
         mapscale_.y(), 10.0);
-    nh_private_.param(ns + "/Exp/maxZ", 
+    nh_private_.param(ns + "/Exp/maxZ", // 3.0
         mapscale_.z(), 0.0);
     nh_private_.param(ns + "/LowResMap/blockX", 
         block_size_.x(), 5);
@@ -54,15 +54,15 @@ void LowResMap::init(const ros::NodeHandle &nh,
         block_size_.y(), 5);
     nh_private_.param(ns + "/LowResMap/blockZ", 
         block_size_.z(), 3);
-    nh_private_.param(ns + "/LowResMap/resolution", 
+    nh_private_.param(ns + "/LowResMap/resolution", // 0.1
         resolution_, 0.2);
-    nh_private_.param(ns + "/LowResMap/showmap", 
+    nh_private_.param(ns + "/LowResMap/showmap", // true
         showmap_, false);
-    nh_private_.param(ns + "/LowResMap/debug", 
+    nh_private_.param(ns + "/LowResMap/debug",  // true
         debug_, false);
-    nh_private_.param(ns + "/LowResMap/seg_length", 
+    nh_private_.param(ns + "/LowResMap/seg_length", // 2.5
         seg_length_, 3.0);
-    nh_private_.param(ns + "/LowResMap/prune_seg_length", 
+    nh_private_.param(ns + "/LowResMap/prune_seg_length", // 6.5
         prune_seg_length_, 3.0);
     nh_private_.param(ns + "/LowResMap/show_dtg", 
         show_dtg_, false);
@@ -81,11 +81,11 @@ void LowResMap::init(const ros::NodeHandle &nh,
         debug_pub_ = nh_.advertise<visualization_msgs::Marker>(ns + "/LowResMap/debug", 10);
     }
 
-    node_size_(0) = ceil(node_scale_(0) / resolution_) + 1;
-    node_size_(1) = ceil(node_scale_(1) / resolution_) + 1;
-    node_size_(2) = ceil(node_scale_(2) / resolution_) + 1;
+    node_size_(0) = ceil(node_scale_(0) / resolution_) + 1;  // 7
+    node_size_(1) = ceil(node_scale_(1) / resolution_) + 1;  // 7
+    node_size_(2) = ceil(node_scale_(2) / resolution_) + 1;  // 7
 
-    node_scale_ = node_size_.cast<double>() * resolution_;
+    node_scale_ = node_size_.cast<double>() * resolution_;  // 0.7
     expand_r_ = Robot_size_ * 0.5;
 
     mapscale_.x() = ceil((mapscale_.x() - origin_.x())/node_scale_(0)) * node_scale_(0);
@@ -102,9 +102,10 @@ void LowResMap::init(const ros::NodeHandle &nh,
     // mapscale_.x() += node_scale_(0);
     // mapscale_.y() += node_scale_(1);
     // mapscale_.z() += node_scale_(2);
-    voxel_num_.x() = ceil((mapscale_.x()-1e-3)/node_scale_(0));
-    voxel_num_.y() = ceil((mapscale_.y()-1e-3)/node_scale_(1));
-    voxel_num_.z() = ceil((mapscale_.z()-1e-3)/node_scale_(2));
+    // 将Exp/maxX/Y/Z和Exp/minX/Y/Z按照(0.7, 0.7, 0.7)的node大小划分
+    voxel_num_.x() = ceil((mapscale_.x()-1e-3)/node_scale_(0));  // (10 - (-10)) / 0.7
+    voxel_num_.y() = ceil((mapscale_.y()-1e-3)/node_scale_(1));  // (20 - (-20)) / 0.7
+    voxel_num_.z() = ceil((mapscale_.z()-1e-3)/node_scale_(2));  // (3  -   0)   / 0.7
     v_n_.x() = voxel_num_.x();
     v_n_.y() = voxel_num_.y() * voxel_num_.x();
     v_n_.z() = voxel_num_.z() * voxel_num_.y() * voxel_num_.x();
@@ -113,16 +114,16 @@ void LowResMap::init(const ros::NodeHandle &nh,
     map_lowbd_ = origin_ + Eigen::Vector3d(1e-4, 1e-4, 1e-4);
 
 
-
-    block_num_.x() = ceil(double(voxel_num_.x()) / block_size_.x());
-    block_num_.y() = ceil(double(voxel_num_.y()) / block_size_.y());
-    block_num_.z() = ceil(double(voxel_num_.z()) / block_size_.z());
+    // 将Exp/maxX/Y/Z和Exp/minX/Y/Z按照(0.7*5, 0.7*5, 0.7*3)的block大小划分
+    block_num_.x() = ceil(double(voxel_num_.x()) / block_size_.x());  // (10 - (-10)) / 0.7 / 5
+    block_num_.y() = ceil(double(voxel_num_.y()) / block_size_.y());  // (20 - (-20)) / 0.7 / 5
+    block_num_.z() = ceil(double(voxel_num_.z()) / block_size_.z());  // (3  -   0)   / 0.7 / 3
     b_n_.x() = block_num_.x();
     b_n_.y() = block_num_.y() * block_num_.x();
     b_n_.z() = block_num_.z() * block_num_.y() * block_num_.x();
-    blockscale_.x() = node_scale_(0)*block_size_.x();
-    blockscale_.y() = node_scale_(1)*block_size_.y();
-    blockscale_.z() = node_scale_(2)*block_size_.z();
+    blockscale_.x() = node_scale_(0)*block_size_.x();  // 0.7 * 5
+    blockscale_.y() = node_scale_(1)*block_size_.y();  // 0.7 * 5
+    blockscale_.z() = node_scale_(2)*block_size_.z();  // 0.7 * 3
 
     edgeblock_size_.x() = voxel_num_.x() - floor(voxel_num_.x() / double(block_size_.x()))*block_size_.x();
     edgeblock_size_.y() = voxel_num_.y() - floor(voxel_num_.y() / double(block_size_.y()))*block_size_.y();
@@ -135,17 +136,17 @@ void LowResMap::init(const ros::NodeHandle &nh,
     edgeblock_scale_.x() = node_scale_(0)*edgeblock_size_.x();
     edgeblock_scale_.y() = node_scale_(1)*edgeblock_size_.y();
     edgeblock_scale_.z() = node_scale_(2)*edgeblock_size_.z();
-    gridBLK_.resize(block_num_.x()*block_num_.y()*block_num_.z());
+    gridBLK_.resize(block_num_.x()*block_num_.y()*block_num_.z());  // vector<shared_ptr<LR_block>> gridBLK_;
 
 
-    localgraph_size_(0) = ceil(localgraph_scale(0)/node_scale_(0));
-    localgraph_size_(1) = ceil(localgraph_scale(1)/node_scale_(1));
-    localgraph_size_(2) = ceil(localgraph_scale(2)/node_scale_(2));
+    localgraph_size_(0) = ceil(localgraph_scale(0)/node_scale_(0)); // 14 / 0.7
+    localgraph_size_(1) = ceil(localgraph_scale(1)/node_scale_(1)); // 14 / 0.7
+    localgraph_size_(2) = ceil(localgraph_scale(2)/node_scale_(2)); //  8 / 0.7
     
-    Inc_list_.resize(4);
-    open_set_.resize(4);
+    Inc_list_.resize(4);  // list<vector<Eigen::MatrixXd>> Inc_list_;  worker; path vec; path; path point
+    open_set_.resize(4);  // vector<prio_A> open_set_; 
     for(int i = 0; i < 4; i++) {
-        Astar_worktable_.push_back(true);
+        Astar_worktable_.push_back(true);  // vector<bool> Astar_worktable_; for multi thread A* search
     }
     
     Eternal_bid_ = -1;
