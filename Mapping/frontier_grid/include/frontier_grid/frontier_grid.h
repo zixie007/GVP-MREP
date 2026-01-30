@@ -218,7 +218,7 @@ private:
 
     int samp_h_dir_num_, samp_v_dir_num_, samp_dist_num_;
     double samp_h_dir_;
-    int samp_dir_num_; //samp_h_dir_num_ * samp_dist_num_
+    int samp_dir_num_; //samp_h_dir_num_ * samp_dist_num_ // 这里的注释不太对，maybe：samp_v_dir_num_ * samp_dist_num_
     int samp_num_; //samp_h_dir_num_ * samp_v_dir_num_ * samp_dist_num_
     // int samp_free_thresh_;
     
@@ -403,22 +403,28 @@ inline bool FrontierGrid::GetVpPos(const int &f_idx, const int &v_id, Eigen::Vec
         return true;
 }
 
-
+// 将前沿点f_idx上的视点v_id转换为空间坐标v_pos(x, y, z, yaw)
 inline bool FrontierGrid::GetVp(const int &f_idx, const int &v_id, Eigen::Vector4d &v_pose){
     if(f_idx < 0 || f_idx >= f_grid_.size() || v_id < 0 || v_id >= samp_num_) return false;
-    if(f_grid_[f_idx].f_state_ != 1) return false;
+    if(f_grid_[f_idx].f_state_ != 1) return false; // 0: unexplored; 1:exploring; 2: explored; 
     // if(!f_grid_[f_idx].dirs_state_[v_id]) return false;
-    int h_idx = (v_id + 0.1) / samp_dir_num_;
+
+    // v_id = h_idx * samp_dir_num_ + v_idx * samp_dist_num_ + d_idx
+
+    // 拆解v_id计算索引
+    int h_idx = (v_id + 0.1) / samp_dir_num_;  // 水平索引h_idx = v_id / samp_dir_num_ = v_id / (samp_v_dir_num_ * samp_dist_num_)
 
     // if((f_grid_[f_idx].dirs_state_[h_idx] == 1)){
-        int d_idx = v_id % samp_dist_num_;
-        int v_idx = (v_id - samp_dir_num_ * h_idx + 0.1) / samp_dist_num_;
+        int d_idx = v_id % samp_dist_num_;  // 距离索引d_idx
+        int v_idx = (v_id - samp_dir_num_ * h_idx + 0.1) / samp_dist_num_; // 垂直索引 v_idx
+        
+        // 计算视点v_id位置v_pose
         double length = sample_dists_[d_idx];
         double vdir_sin = sample_vdir_sins_[v_idx];
         double vdir_cos = sample_vdir_coses_[v_idx];
         double hdir_sin = sample_hdir_sins_[h_idx];
         double hdir_cos = sample_hdir_coses_[h_idx];
-        v_pose(3) = M_PI + sample_h_dirs_[h_idx];
+        v_pose(3) = M_PI + sample_h_dirs_[h_idx];  // 论文中提到：每个视点的yaw角指向EROI的中心
         v_pose(2) = length * vdir_sin + f_grid_[f_idx].center_(2);
         v_pose(1) = length * vdir_cos * hdir_sin + f_grid_[f_idx].center_(1);
         v_pose(0) = length * vdir_cos * hdir_cos + f_grid_[f_idx].center_(0);
