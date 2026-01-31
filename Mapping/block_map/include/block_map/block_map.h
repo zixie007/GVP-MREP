@@ -629,16 +629,16 @@ inline Eigen::Vector3d BlockMap::IdtoPos(int id){
     int z = ((id - x) - y*voxel_num_(0))/voxel_num_(1)/voxel_num_(0);
     return Eigen::Vector3d((double(x)+0.5)*resolution_,(double(y)+0.5)*resolution_,(double(z)+0.5)*resolution_)+origin_;
 }
-
+// 获得从start到end射线经过所有体素的坐标，存入line中
 inline void BlockMap::GetCastLine(const Eigen::Vector3d &start, const Eigen::Vector3d &end, list<Eigen::Vector3d> &line){
     RayCaster rc;
     Eigen::Vector3d ray_iter;
     Eigen::Vector3d half_res = Eigen::Vector3d(0.5, 0.5, 0.5) * resolution_;
     line.clear();
-    rc.setInput((start - origin_) / resolution_, (end - origin_) / resolution_);
+    rc.setInput((start - origin_) / resolution_, (end - origin_) / resolution_); // 这里将Vector3d转换成了体素索引
     while (rc.step(ray_iter))
     {
-        ray_iter = (ray_iter) * resolution_ + origin_ + half_res;
+        ray_iter = (ray_iter) * resolution_ + origin_ + half_res;  // 将体素索引转换成世界坐标
         line.emplace_back(ray_iter);
     }
 }

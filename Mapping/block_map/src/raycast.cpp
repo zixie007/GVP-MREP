@@ -2,15 +2,16 @@
 #include <cmath>
 #include <iostream>
 #include <block_map/raycast.h>
-
+// 符号函数
 int signum(int x) {
   return x == 0 ? 0 : x < 0 ? -1 : 1;
 }
-
+// 浮点数取模 结果与modulus符号相同，在0与modulus之间
 double mod(double value, double modulus) {
+  // fmod():浮点数取模运算 double fmod(double x, double y) 结果与x符号相同，在-y与y之间
   return fmod(fmod(value, modulus) + modulus, modulus);
 }
-
+// Find the smallest positive t such that s+t*ds is an integer.
 double intbound(double s, double ds) {
   // Find the smallest positive t such that s+t*ds is an integer.
   if (ds < 0) {
@@ -224,7 +225,7 @@ void Raycast(const Eigen::Vector3d& start, const Eigen::Vector3d& end, const Eig
     }
   }
 }
-
+// 一些初始化操作，参数为体素索引
 bool RayCaster::setInput(const Eigen::Vector3d& start,
                          const Eigen::Vector3d& end /* , const Eigen::Vector3d& min,
                          const Eigen::Vector3d& max */) {
@@ -243,18 +244,20 @@ bool RayCaster::setInput(const Eigen::Vector3d& start,
   maxDist_ = direction_.squaredNorm();
 
   // Break out direction vector.
-  dx_ = endX_ - x_;
+  dx_ = endX_ - x_;  // 从起点到终点在X方向上需要遍历的体素数量
   dy_ = endY_ - y_;
   dz_ = endZ_ - z_;
 
   // Direction to increment x,y,z when stepping.
+  // 确定射线在XYZ维度上增量的符号 1/0/-1
   stepX_ = (int)signum((int)dx_);
   stepY_ = (int)signum((int)dy_);
   stepZ_ = (int)signum((int)dz_);
 
   // See description above. The initial values depend on the fractional
   // part of the origin.
-  tMaxX_ = intbound(start_.x(), dx_);
+  // 计算start_,x()在X维度上沿dx_射线方向移动一个体素单位所需的正系数tMaxX_
+  tMaxX_ = intbound(start_.x(), dx_); // Find the smallest positive t such that [start_.x() + tMaxX_ * dx_] is an integer.
   tMaxY_ = intbound(start_.y(), dy_);
   tMaxZ_ = intbound(start_.z(), dz_);
 
@@ -268,12 +271,13 @@ bool RayCaster::setInput(const Eigen::Vector3d& start,
   step_num_ = 0;
 
   // Avoids an infinite loop.
+  // start和end是同一个点，无需遍历
   if (stepX_ == 0 && stepY_ == 0 && stepZ_ == 0)
     return false;
   else
     return true;
 }
-
+// 从射线体素起点沿着射线方向步进移动一个体素单位
 bool RayCaster::step(Eigen::Vector3d& ray_pt) {
   // if (x_ >= min_.x() && x_ < max_.x() && y_ >= min_.y() && y_ < max_.y() &&
   // z_ >= min_.z() && z_ <
@@ -296,7 +300,9 @@ bool RayCaster::step(Eigen::Vector3d& ray_pt) {
   // tMaxX stores the t-value at which we cross a cube boundary along the
   // X axis, and similarly for Y and Z. Therefore, choosing the least tMax
   // chooses the closest cube boundary. Only the first case of the four
-  // has been commented in detail.
+  // has been commented in detail. 其实也没有多细节....
+
+  // 动态维护tMaxX_ tMaxY_ tMaxZ_，在XYZ维度上找到射线最先穿过的体素边界的方向，并往该方向上移动一个体素单位
   if (tMaxX_ < tMaxY_) {
     if (tMaxX_ < tMaxZ_) {
       // Update which cube we are now in.

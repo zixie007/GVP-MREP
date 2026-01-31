@@ -956,7 +956,7 @@ void BlockMap::SendSwarmBlockMap(const int &f_id, const bool &send_now){
         }
     }
 }
-
+// 检查以pos为体心，边长为bbx正方体中所有体素的状态是否为occupied
 bool BlockMap::PosBBXOccupied(const Eigen::Vector3d &pos, const Eigen::Vector3d &bbx){
     Eigen::Vector3d lowbd, upbd, v_it;
     VoxelState state;

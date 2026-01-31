@@ -25,7 +25,7 @@ void FrontierGrid::init(ros::NodeHandle &nh, ros::NodeHandle &nh_private){
         sample_max_range_, 4.5);
     nh_private_.param(ns + "/Frontier/grid_scale", 
         node_scale_, 5.0);
-    nh_private_.param(ns + "/Frontier/viewpoint_thresh", 
+    nh_private_.param(ns + "/Frontier/viewpoint_thresh",  // 1.3
         vp_thresh_, 2.0);
     nh_private_.param(ns + "/Frontier/observe_thresh", 
         obs_thresh_, 0.85);
@@ -654,15 +654,15 @@ void FrontierGrid::LazySampleCallback(const ros::TimerEvent &e){
         }   
     }
 }
-
+// 检查视点周围是否安全，并通过打射线累积视点增益判断该视点是否有效
 bool FrontierGrid::StrongCheckViewpoint(const int &f_id, const int &v_id, const bool &allow_unknown){
     Eigen::Vector4d vp_pose;
-    if(!GetVp(f_id, v_id, vp_pose)) return false;
+    if(!GetVp(f_id, v_id, vp_pose)) return false; // 获取视点v_id的4d位置vp_pose(x, y, z, yaw)
     auto &frontier = f_grid_[f_id];
 
     // block check
     Eigen::Vector3d pos = vp_pose.block(0, 0, 3, 1);
-    if(allow_unknown && BM_->PosBBXOccupied(pos, Robot_size_)) {
+    if(allow_unknown && BM_->PosBBXOccupied(pos, Robot_size_)) {  // 检查视点为体心，Robot_size_为边长的正方体中的所有体素是否为occupied
         // cout<<"colli1"<<endl;
         return false;
     }
@@ -679,6 +679,9 @@ bool FrontierGrid::StrongCheckViewpoint(const int &f_id, const int &v_id, const 
     bool inside_f;
     VoxelState state;
     // ROS_WARN("StrongCheckViewpoint0");
+
+    // vector<list<pair<Eigen::Vector3d, double>>> gain_dirs_;
+    // 一个视点会打多条射线，计算信息增益
     for(auto &d_l : gain_dirs_[v_id]){
         //debug
         // if((pos - (d_l.first + f_grid_[f_id].center_)).norm() > sensor_range_){
@@ -688,9 +691,10 @@ bool FrontierGrid::StrongCheckViewpoint(const int &f_id, const int &v_id, const 
         //     cout<<(d_l.first).transpose()<<endl;
         //     cout<<(f_grid_[f_id].center_).transpose()<<endl;
         // }
-        BM_->GetCastLine(pos, d_l.first + frontier.center_, ray);
+        BM_->GetCastLine(pos, d_l.first + frontier.center_, ray); // 获得从pos到d_l.first + frontier.center_的射线ray
         for(auto &p : ray){
             inside_f = true;
+            // 判断p是否还在frontier内
             for(int dim = 0; dim < 3; dim++){
                 if(abs(frontier.center_(dim) - p(dim)) > f_scale(dim)){
                     inside_f = false;
@@ -702,6 +706,7 @@ bool FrontierGrid::StrongCheckViewpoint(const int &f_id, const int &v_id, const 
                 if(state == VoxelState::occupied || state == VoxelState::out){
                     break;
                 }
+                // 体素状态为unknown/free，不处理，继续遍历？
             }
             else{
                 if(state == VoxelState::free){
@@ -710,15 +715,15 @@ bool FrontierGrid::StrongCheckViewpoint(const int &f_id, const int &v_id, const 
                 else if(state == VoxelState::occupied || state == VoxelState::out){
                     break;
                 }
-                else{
+                else{ // state == unknown,计算信息增益
                     gain += d_l.second * pow((p - pos).norm(), 2);
-                    break;
+                    break;  // 每条射线只累积最早出现unknown体素的IG
                 }
             }
         }
     }
     // ROS_WARN("StrongCheckViewpoint1");
-    if(gain < vp_thresh_) {
+    if(gain < vp_thresh_) {  // 如果没有达到最小视点增益阈值，则该视点无效
         return false;
     }
     return true;
